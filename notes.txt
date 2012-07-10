@@ -1,0 +1,26 @@
+#.rvmrc#
+#------------
+# create the gemset if it does not exist
+rvm_gemset_create_on_use_flag=1
+# switch to default ruby version when exiting directory
+rvm_project_rvmrc_default=1
+
+# use ruby 1.9.2 with a specific gemset
+rvm ruby-1.9.2-p320@veewee
+#------------
+
+cd ..;cd -
+# answer yes
+
+gem install veewee
+gem install vagrant
+gem install ohai chef knife-ec2 knife-rackspace knife-openstack
+
+vagrant init ubuntu-11.10-server-amd64
+git clone http://github.com/thewoolleyman/cookbooks.git other_cookbooks
+git clone opscode cookbooks
+vagrant up
+copy the /etc/chef/*.pem files out .. 
+knife configure -i
+default password: admin p@ssw0rd1
+

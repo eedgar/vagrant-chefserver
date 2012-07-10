@@ -1,0 +1,104 @@
+#http://assets.en.oreilly.com/1/event/61/oscon2011_tute_chef_19882.htm
+#http://www.jedi.be/blog/2011/03/28/using-vagrant-as-a-team
+   # local rvm gems :)
+# Install Xcode this was already installed on my system
+# Install Ruby Version Manager (RVM), this is important if using veewee or vagrant, the gems conflict otherwise.
+# centos required libtool to be installed
+
+#
+
+
+curl -k -s https://rvm.beginrescueend.com/install/rvm | bash
+mkdir ~/chef
+cd ~/chef
+mkdir ~/.chef/
+source "$HOME/.rvm/scripts/rvm" # if you install rvm as root, it installs /usr/local/bin/rvm
+rvm install ruby-1.9.2
+rvm use ruby-1.9.2
+
+echo "rvm_gemset_create_on_use_flag=1" > .rvmrc
+echo "rvm gemset use vagrant" >> .rvmrc
+echo "rvm use 1.9.2" >> .rvmrc
+
+gem install ohai chef knife-ec2 knife-rackspace knife-openstack --no-ri --no-rdoc
+gem install vagrant
+gem install veewee
+gem install ruby-debug19
+
+vi ~/.rvm/gems/ruby-1.9.2-p318\@vagrant/specifications/chef-0.10.8.gemspec
+s.add_runtime_dependency(%q<net-ssh>, ["~> 2.2.2"])
+
+
+#Add to .bashrc
+[[ -s "$HOME/.rvm/scripts/rvm" ]] && . "$HOME/.rvm/scripts/rvm"
+
+#rvm use --default ruby-1.9.2
+
+# Make a directory with the connections to the server you want to connect to.
+# Create a client.rb
+
+cat EOF > /etc/chef/solo.rb
+file_cache_path "/tmp/chef-solo"
+cookbook_path "/tmp/chef-solo/cookbooks"
+EOF
+
+cat EOF > chef.json
+{
+  "chef_server": {
+    "server_url": "http://localhost:4000",
+    "init_style": "init"
+  },
+  "run_list": [ "recipe[chef-server::rubygems-install]" ]
+}
+EOF
+
+sudo -E chef-solo -c /etc/chef/solo.rb -j ~/chef.json -r http://s3.amazonaws.com/chef-solo/bootstrap-latest.tar.gz
+
+
+vi ~/.chef/knife.rb
+current_dir = File.dirname(__FILE__)
+log_level                :info
+log_location             STDOUT
+node_name                'i7'
+client_key               '/home/eedgar/.chef/i7.pem'
+validation_client_name   'chef-validator'
+validation_key           '/home/eedgar/.chef/validation.pem'
+chef_server_url          'http://i7.edgar.loc:4000'
+cache_type               'BasicFile'
+cache_options( :path => '/home/eedgar/.chef/checksums' )
+cookbook_path           [ "#{current_dir}/cookbooks" ]
+
+
+
+#mkdir -p ~/chef/veewee-builds
+#Install Virtualbox
+#sudo /etc/init.d/vboxdrv setup
+
+echo "rvm_gemset_create_on_use_flag=1" > .rvmrc
+echo "rvm gemset use veewee" >> .rvmrc
+echo "rvm use 1.9.2" >> .rvmrc
+gem install vagrant veewee
+vagrant basebox build CentOS-5.8-x86_64
+vagrant basebox build CentOS-6.2-x86_64
+
+
+vagrant basebox validate CentOS-5.8-x86_64
+vagrant basebox export CentOS-5.8-x86_64
+
+VEEWEE_SSH_PORT=7422
+export VEEWEE_SSH_PORT
+vagrant basebox validate CentOS-6.2-x86_64
+vagrant basebox export CentOS-6.2-x86_64
+
+vagrant box add 'CentOS-5.8-x86_64' 'CentOS-5.8-x86_64.box'
+vagrant box add 'CentOS-6.2-x86_64' 'CentOS-6.2-x86_64.box'
+
+vagrant init 'CentOS-6.2-x86_64'
+vagrant up
+vagrant ssh
+
+cd ~/.chef
+git clone git://github.com/opscode/cookbooks.git
+#knife cookbook upload -a
+cd /chef
+knife cookbook upload ntp
