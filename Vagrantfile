@@ -73,6 +73,7 @@ Vagrant::Config.run do |config|
 #     chef.add_recipe("build-essential")
      chef.add_recipe("chef-server::rubygems-install")
      chef.add_recipe("apache2")
+     chef.add_recipe("ntp")
      chef.add_recipe("chefpem")
      #chef.roles_path = "../my-recipes/roles"
      #chef.data_bags_path = "../my-recipes/data_bags"
