@@ -57,4 +57,12 @@ cookbook_path           [ "/Users/eedgar/Projects/zenoss/cookbooks",
                         ]
                           
 
-#"/Users/eedgar/Projects/openstack-chef-repo/cookbooks",
+
+
+Useful bash aliases
+alias vp="vagrant provision"
+alias vs="vagrant ssh"
+alias vu="vagrant up"
+alias vd="vagrant destroy"
+alias vsu="vagrant suspend"
+alias kcu="knife cookbook upload"
